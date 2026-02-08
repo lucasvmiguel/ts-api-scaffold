@@ -51,6 +51,7 @@ jobs:
       - name: Run tests
         env:
           DATABASE_URL: postgresql://postgres:password@localhost:5432/ts-api-scaffold
+          JWT_SECRET: "test-secret"
         run: bun test
 
       - name: Build application

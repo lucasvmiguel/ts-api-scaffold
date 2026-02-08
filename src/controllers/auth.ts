@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 
-import { AuthService } from "../services/auth";
+import { AuthError, AuthService } from "../services/auth";
 import {
   loginSchema,
   tokenSchema,
@@ -11,6 +11,7 @@ import {
   UserSchema,
 } from "../schemas/auth";
 import { OpenApi, ApiTags } from "../../libs/open-api";
+import * as logger from "../../libs/logger";
 
 @ApiTags(["Auth"])
 export class AuthController {
@@ -54,7 +55,7 @@ export class AuthController {
         },
       });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      this.handleError(error, res);
     }
   }
 
@@ -95,7 +96,7 @@ export class AuthController {
         },
       });
     } catch (error: any) {
-      res.status(401).json({ message: error.message });
+      this.handleError(error, res);
     }
   }
 
@@ -129,7 +130,7 @@ export class AuthController {
         .status(200)
         .json({ message: "Token refreshed successfully", data: tokens });
     } catch (error: any) {
-      res.status(401).json({ message: error.message });
+      this.handleError(error, res);
     }
   }
 
@@ -159,7 +160,21 @@ export class AuthController {
       await this.authService.logout(accessToken);
       res.status(200).json({ message: "Logout successful" });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      this.handleError(error, res);
     }
+  }
+
+  private handleError(error: any, res: Response) {
+    if (error instanceof z.ZodError) {
+      res
+        .status(400)
+        .json({ error: "Validation error", details: error.issues });
+    }
+    if (error instanceof AuthError) {
+      res.status(401).json({ error: error.message });
+    }
+
+    logger.error("Internal server error", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 }

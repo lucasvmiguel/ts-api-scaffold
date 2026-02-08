@@ -1,21 +1,15 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import request from "supertest";
 
-import { dbHelper } from "../utils/db-helper";
 import { createUser } from "../utils/auth-helper";
 
 describe("Auth Integration Tests", () => {
   let app: any;
 
   beforeAll(async () => {
-    await dbHelper.start();
     const serverModule = await import("../../server");
     app = serverModule.default;
   }, 120000);
-
-  afterAll(async () => {
-    await dbHelper.stop();
-  });
 
   it("should register a new user", async () => {
     const testUser = {

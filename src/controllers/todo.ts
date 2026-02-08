@@ -8,6 +8,7 @@ import {
   TodoSchema,
 } from "../schemas/todo";
 import { OpenApi, ApiTags } from "../../libs/open-api";
+import * as logger from "../../libs/logger";
 
 @ApiTags(["Todos"])
 export class TodoController {
@@ -36,9 +37,7 @@ export class TodoController {
       const todos = await this.todoService.getAllTodos();
       res.json({ message: "Todos retrieved successfully", data: todos });
     } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Failed to fetch todos", details: "Unknown error" });
+      this.handleError(error, res);
     }
   };
 
@@ -70,19 +69,17 @@ export class TodoController {
     try {
       const id = Number(req.params.id);
       if (isNaN(id)) {
-        res.status(400).json({ message: "Invalid ID", details: null });
+        res.status(400).json({ error: "Invalid ID", details: null });
         return;
       }
       const todo = await this.todoService.getTodoById(id);
       if (!todo) {
-        res.status(404).json({ message: "Todo not found", details: null });
+        res.status(404).json({ error: "Todo not found", details: null });
         return;
       }
       res.json({ message: "Todo retrieved successfully", data: todo });
     } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Failed to fetch todo", details: "Unknown error" });
+      this.handleError(error, res);
     }
   };
 
@@ -121,15 +118,7 @@ export class TodoController {
         .status(201)
         .json({ message: "Todo created successfully", data: todo });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res
-          .status(400)
-          .json({ message: "Validation error", details: error.issues });
-      } else {
-        res
-          .status(500)
-          .json({ message: "Failed to create todo", details: "Unknown error" });
-      }
+      this.handleError(error, res);
     }
   };
 
@@ -168,26 +157,18 @@ export class TodoController {
     try {
       const id = Number(req.params.id);
       if (isNaN(id)) {
-        res.status(400).json({ message: "Invalid ID", details: null });
+        res.status(400).json({ error: "Invalid ID", details: null });
         return;
       }
       const data = updateTodoSchema.parse(req.body);
       const todo = await this.todoService.updateTodo(id, data);
       if (!todo) {
-        res.status(404).json({ message: "Todo not found", details: null });
+        res.status(404).json({ error: "Todo not found", details: null });
         return;
       }
       res.json({ message: "Todo updated successfully", data: todo });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res
-          .status(400)
-          .json({ message: "Validation error", details: error.issues });
-      } else {
-        res
-          .status(500)
-          .json({ message: "Failed to update todo", details: "Unknown error" });
-      }
+      this.handleError(error, res);
     }
   };
 
@@ -208,21 +189,30 @@ export class TodoController {
     try {
       const id = Number(req.params.id);
       if (isNaN(id)) {
-        res.status(400).json({ message: "Invalid ID", details: null });
+        res.status(400).json({ error: "Invalid ID", details: null });
         return;
       }
       const todo = await this.todoService.deleteTodo(id);
       if (!todo) {
-        res.status(404).json({ message: "Todo not found", details: null });
+        res.status(404).json({ error: "Todo not found", details: null });
         return;
       }
       res
         .status(200)
         .json({ message: "Todo deleted successfully", data: null });
     } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Failed to delete todo", details: "Unknown error" });
+      this.handleError(error, res);
     }
   };
+
+  private handleError(error: any, res: Response) {
+    if (error instanceof z.ZodError) {
+      res
+        .status(400)
+        .json({ error: "Validation error", details: error.issues });
+    }
+
+    logger.error("Internal server error", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 }

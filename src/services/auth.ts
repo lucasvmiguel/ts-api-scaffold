@@ -13,12 +13,22 @@ const REFRESH_TOKEN_EXPIRES_DAYS = 7;
 
 type UserWithoutPassword = Omit<User, "password">;
 
+export class AuthError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AuthError";
+  }
+}
+
 export class AuthService {
   constructor(
     private userRepository: UserRepository,
     private tokenRepository: TokenRepository,
   ) {}
 
+  /**
+   * Register a new user by creating a new user in the database and generating tokens for the user.
+   */
   async register(data: {
     email: string;
     password: string;
@@ -26,7 +36,7 @@ export class AuthService {
   }): Promise<{ user: UserWithoutPassword; token: Token }> {
     const existingUser = await this.userRepository.findByEmail(data.email);
     if (existingUser) {
-      throw new Error("User already exists");
+      throw new AuthError("User already exists");
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -42,18 +52,22 @@ export class AuthService {
     };
   }
 
+  /**
+   * Login a user by finding the user in the database and comparing the password.
+   * If the password is correct, generate tokens for the user.
+   */
   async login(data: {
     email: string;
     password: string;
   }): Promise<{ user: UserWithoutPassword; token: Token }> {
     const user = await this.userRepository.findByEmail(data.email);
     if (!user) {
-      throw new Error("Invalid credentials");
+      throw new AuthError("Invalid credentials");
     }
 
     const isValidPassword = await bcrypt.compare(data.password, user.password);
     if (!isValidPassword) {
-      throw new Error("Invalid credentials");
+      throw new AuthError("Invalid credentials");
     }
 
     const tokens = await this.generateTokens(user);
@@ -63,16 +77,20 @@ export class AuthService {
     };
   }
 
+  /**
+   * Refresh tokens by finding the token in the database and checking if it is valid.
+   * If the token is valid, generate new tokens for the user.
+   */
   async refresh(refreshToken: string): Promise<Token> {
     const storedToken = await this.tokenRepository.findByToken(refreshToken);
     if (!storedToken || storedToken.revoked) {
-      throw new Error("Invalid refresh token");
+      throw new AuthError("Invalid refresh token");
     }
 
     // Check if expired
     if (storedToken.expiresAt < new Date()) {
       await this.tokenRepository.revoke(storedToken.id);
-      throw new Error("Refresh token expired");
+      throw new AuthError("Refresh token expired");
     }
 
     // Revoke old token (Rotation)
@@ -86,6 +104,9 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
+  /**
+   * Logout a user by revoking the refresh token.
+   */
   async logout(refreshToken: string): Promise<void> {
     const storedToken = await this.tokenRepository.findByToken(refreshToken);
     if (storedToken) {

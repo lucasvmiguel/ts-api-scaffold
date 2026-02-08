@@ -21,11 +21,4 @@ export class TokenRepository {
       data: { revoked: true },
     });
   }
-
-  async revokeAllForUser(userId: number): Promise<Prisma.BatchPayload> {
-    return prisma.token.updateMany({
-      where: { userId },
-      data: { revoked: true },
-    });
-  }
 }

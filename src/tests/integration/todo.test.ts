@@ -54,7 +54,7 @@ describe("Todo Integration Tests", () => {
         .send({ description: "Missing title" })
         .expect(400);
 
-      expect(response.body.message).toBe("Validation error");
+      expect(response.body.error).toBe("Validation error");
       expect(response.body.details).toBeDefined();
     });
   });
@@ -98,7 +98,7 @@ describe("Todo Integration Tests", () => {
         .get(`/api/todos/${nonExistentId}`)
         .set("Authorization", `Bearer ${accessToken}`)
         .expect(404);
-      expect(res.body.message).toBe("Todo not found");
+      expect(res.body.error).toBe("Todo not found");
       expect(res.body.details).toBeNull();
     });
 
@@ -107,7 +107,7 @@ describe("Todo Integration Tests", () => {
         .get("/api/todos/invalid-id")
         .set("Authorization", `Bearer ${accessToken}`)
         .expect(400);
-      expect(res.body.message).toBe("Invalid ID");
+      expect(res.body.error).toBe("Invalid ID");
       expect(res.body.details).toBeNull();
     });
   });
@@ -142,7 +142,7 @@ describe("Todo Integration Tests", () => {
         .set("Authorization", `Bearer ${accessToken}`)
         .send({ title: "Updated Title" })
         .expect(404);
-      expect(res.body.message).toBe("Todo not found");
+      expect(res.body.error).toBe("Todo not found");
       expect(res.body.details).toBeNull();
     });
 
@@ -152,7 +152,7 @@ describe("Todo Integration Tests", () => {
         .set("Authorization", `Bearer ${accessToken}`)
         .send({ title: "Updated Title" })
         .expect(400);
-      expect(res.body.message).toBe("Invalid ID");
+      expect(res.body.error).toBe("Invalid ID");
       expect(res.body.details).toBeNull();
     });
   });
@@ -177,7 +177,7 @@ describe("Todo Integration Tests", () => {
         .get(`/api/todos/${id}`)
         .set("Authorization", `Bearer ${accessToken}`)
         .expect(404);
-      expect(getRes.body.message).toBe("Todo not found");
+      expect(getRes.body.error).toBe("Todo not found");
     });
 
     it("should return 404 when deleting a non-existent todo", async () => {
@@ -186,7 +186,7 @@ describe("Todo Integration Tests", () => {
         .delete(`/api/todos/${nonExistentId}`)
         .set("Authorization", `Bearer ${accessToken}`)
         .expect(404);
-      expect(res.body.message).toBe("Todo not found");
+      expect(res.body.error).toBe("Todo not found");
     });
 
     it("should return 400 when deleting a todo with invalid ID", async () => {
@@ -194,7 +194,7 @@ describe("Todo Integration Tests", () => {
         .delete("/api/todos/invalid-id")
         .set("Authorization", `Bearer ${accessToken}`)
         .expect(400);
-      expect(res.body.message).toBe("Invalid ID");
+      expect(res.body.error).toBe("Invalid ID");
     });
   });
 });
