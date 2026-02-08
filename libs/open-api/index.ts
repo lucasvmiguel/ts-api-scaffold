@@ -66,25 +66,37 @@ export function registerSchemas(registry: OpenAPIRegistry, modules: object[]) {
 
 export function registerControllers(
   registry: OpenAPIRegistry,
-  controller: any,
+  controllers: any[],
 ) {
-  const prototype = Object.getPrototypeOf(controller);
-  const propertyNames = Object.getOwnPropertyNames(controller);
-  const classTags: string[] =
-    Reflect.getMetadata(OPENAPI_TAGS_KEY, prototype) || [];
+  controllers.forEach((controller) => {
+    const prototype = Object.getPrototypeOf(controller);
+    const classTags: string[] =
+      Reflect.getMetadata(OPENAPI_TAGS_KEY, prototype) || [];
 
-  propertyNames.forEach((propertyName) => {
-    const routeConfig: RouteConfig | undefined = Reflect.getMetadata(
-      OPENAPI_METADATA_KEY,
-      controller,
-      propertyName,
-    );
+    // Get all property names from both instance and prototype
+    const instanceProperties = Object.getOwnPropertyNames(controller);
+    const prototypeProperties = Object.getOwnPropertyNames(prototype);
+    const propertyNames = new Set([
+      ...instanceProperties,
+      ...prototypeProperties,
+    ]);
 
-    if (routeConfig) {
-      if (classTags.length > 0) {
-        routeConfig.tags = [...(routeConfig.tags || []), ...classTags];
+    propertyNames.forEach((propertyName) => {
+      // Skip constructor
+      if (propertyName === "constructor") return;
+
+      const routeConfig: RouteConfig | undefined = Reflect.getMetadata(
+        OPENAPI_METADATA_KEY,
+        controller,
+        propertyName,
+      );
+
+      if (routeConfig) {
+        if (classTags.length > 0) {
+          routeConfig.tags = [...(routeConfig.tags || []), ...classTags];
+        }
+        registry.registerPath(routeConfig);
       }
-      registry.registerPath(routeConfig);
-    }
+    });
   });
 }

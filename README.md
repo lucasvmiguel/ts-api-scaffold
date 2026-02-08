@@ -105,11 +105,13 @@ bun test
   - Success: `{ message: string, data: any }`
   - Error: `{ message: string, details: any }`
 - **Error Handling**: Wrap logic in `try/catch`. Handle `z.ZodError` explicitly (400 Bad Request). Catch-all 500 for unknown errors.
+- **File naming**: Use for files (e.g., `some-entity.ts`).
 
 #### 2. Services (`src/services/*.ts`)
 
 - **Business Logic**: All complex logic resides here.
 - **Return Values**: Return domain objects or `null` if not found. Do not throw HTTP errors here; let the controller handle status codes based on the return value.
+- **File naming**: Use for files (e.g., `some-entity.ts`).
 
 #### 3. Repositories (`src/repositories/*.ts`)
 
@@ -117,12 +119,14 @@ bun test
 - **Methods**: `findAll`, `findById`, `create`, `update`, `delete`.
 - **Error Handling**:
   - Catch `P2025` (Record to update not found) and return `null` or `false` rather than throwing, if appropriate for the flow.
+- **File naming**: Use for files (e.g., `some-entity.ts`).
 
 #### 4. Validation (`src/schemas/*.ts`)
 
 - **Zod**: Define strict Zod schemas for all request bodies and route parameters.
 - **Naming**: suffix with `Schema` (e.g., `createTodoSchema`, `updateTodoSchema`).
 - **OpenAPI Integration**: Use `@asteasolutions/zod-to-openapi` (via `.openapi()` method on Zod schemas) to provide examples and descriptions for Swagger.
+- **File naming**: Use for files (e.g., `some-entity.ts`).
 
 #### 5. Testing (`src/tests`)
 
@@ -132,6 +136,7 @@ bun test
   - `beforeAll`: `await dbHelper.start()`
   - `afterAll`: `await dbHelper.stop()`
 - **Structure**: Group tests by functionality (`describe("GET /api/resource")`).
+- **File naming**: Use for files (e.g., `some-entity.test.ts`).
 
 ### Key Files to Reference
 

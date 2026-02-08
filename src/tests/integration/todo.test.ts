@@ -1,10 +1,12 @@
 import { describe, it, beforeAll, afterAll, expect } from "bun:test";
 import request from "supertest";
 
+import { createUser } from "../utils/auth-helper";
 import { dbHelper } from "../utils/db-helper";
 
 describe("Todo Integration Tests", () => {
   let app: any;
+  let accessToken: string;
 
   beforeAll(async () => {
     // Start Postgres manually using db helper
@@ -15,6 +17,10 @@ describe("Todo Integration Tests", () => {
     const serverModule = await import("../../server");
     app = serverModule.default;
     console.log("App imported.");
+
+    // Get access token
+    const { token } = await createUser(app);
+    accessToken = token.accessToken;
   }, 120000);
 
   afterAll(async () => {
@@ -30,6 +36,7 @@ describe("Todo Integration Tests", () => {
 
       const response = await request(app)
         .post("/api/todos")
+        .set("Authorization", `Bearer ${accessToken}`)
         .send(todoData)
         .expect(201);
 
@@ -43,6 +50,7 @@ describe("Todo Integration Tests", () => {
     it("should return 400 when creating a todo without title", async () => {
       const response = await request(app)
         .post("/api/todos")
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({ description: "Missing title" })
         .expect(400);
 
@@ -53,7 +61,10 @@ describe("Todo Integration Tests", () => {
 
   describe("GET /api/todos", () => {
     it("should retrieve todos", async () => {
-      const response = await request(app).get("/api/todos").expect(200);
+      const response = await request(app)
+        .get("/api/todos")
+        .set("Authorization", `Bearer ${accessToken}`)
+        .expect(200);
 
       expect(response.body.message).toBe("Todos retrieved successfully");
       expect(Array.isArray(response.body.data)).toBe(true);
@@ -69,10 +80,14 @@ describe("Todo Integration Tests", () => {
     it("should get a todo by id", async () => {
       const createRes = await request(app)
         .post("/api/todos")
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({ title: "Todo for Get ID" });
       const id = createRes.body.data.id;
 
-      const res = await request(app).get(`/api/todos/${id}`).expect(200);
+      const res = await request(app)
+        .get(`/api/todos/${id}`)
+        .set("Authorization", `Bearer ${accessToken}`)
+        .expect(200);
       expect(res.body.message).toBe("Todo retrieved successfully");
       expect(res.body.data.title).toBe("Todo for Get ID");
     });
@@ -81,13 +96,17 @@ describe("Todo Integration Tests", () => {
       const nonExistentId = 999999;
       const res = await request(app)
         .get(`/api/todos/${nonExistentId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(404);
       expect(res.body.message).toBe("Todo not found");
       expect(res.body.details).toBeNull();
     });
 
     it("should return 400 when getting a todo with invalid ID", async () => {
-      const res = await request(app).get("/api/todos/invalid-id").expect(400);
+      const res = await request(app)
+        .get("/api/todos/invalid-id")
+        .set("Authorization", `Bearer ${accessToken}`)
+        .expect(400);
       expect(res.body.message).toBe("Invalid ID");
       expect(res.body.details).toBeNull();
     });
@@ -97,18 +116,22 @@ describe("Todo Integration Tests", () => {
     it("should update a todo", async () => {
       const createRes = await request(app)
         .post("/api/todos")
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({ title: "Todo to Update" });
       const id = createRes.body.data.id;
 
       const updateRes = await request(app)
         .put(`/api/todos/${id}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({ done: true })
         .expect(200);
 
       expect(updateRes.body.message).toBe("Todo updated successfully");
       expect(updateRes.body.data.done).toBe(true);
 
-      const getRes = await request(app).get(`/api/todos/${id}`);
+      const getRes = await request(app)
+        .get(`/api/todos/${id}`)
+        .set("Authorization", `Bearer ${accessToken}`);
       expect(getRes.body.data.done).toBe(true);
     });
 
@@ -116,6 +139,7 @@ describe("Todo Integration Tests", () => {
       const nonExistentId = 999999;
       const res = await request(app)
         .put(`/api/todos/${nonExistentId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({ title: "Updated Title" })
         .expect(404);
       expect(res.body.message).toBe("Todo not found");
@@ -125,6 +149,7 @@ describe("Todo Integration Tests", () => {
     it("should return 400 when updating a todo with invalid ID", async () => {
       const res = await request(app)
         .put("/api/todos/invalid-id")
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({ title: "Updated Title" })
         .expect(400);
       expect(res.body.message).toBe("Invalid ID");
@@ -136,17 +161,22 @@ describe("Todo Integration Tests", () => {
     it("should delete a todo", async () => {
       const createRes = await request(app)
         .post("/api/todos")
+        .set("Authorization", `Bearer ${accessToken}`)
         .send({ title: "Todo to Delete" });
       const id = createRes.body.data.id;
 
       const deleteRes = await request(app)
         .delete(`/api/todos/${id}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(200);
 
       expect(deleteRes.body.message).toBe("Todo deleted successfully");
       expect(deleteRes.body.data).toBeNull();
 
-      const getRes = await request(app).get(`/api/todos/${id}`).expect(404);
+      const getRes = await request(app)
+        .get(`/api/todos/${id}`)
+        .set("Authorization", `Bearer ${accessToken}`)
+        .expect(404);
       expect(getRes.body.message).toBe("Todo not found");
     });
 
@@ -154,6 +184,7 @@ describe("Todo Integration Tests", () => {
       const nonExistentId = 999999;
       const res = await request(app)
         .delete(`/api/todos/${nonExistentId}`)
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(404);
       expect(res.body.message).toBe("Todo not found");
     });
@@ -161,6 +192,7 @@ describe("Todo Integration Tests", () => {
     it("should return 400 when deleting a todo with invalid ID", async () => {
       const res = await request(app)
         .delete("/api/todos/invalid-id")
+        .set("Authorization", `Bearer ${accessToken}`)
         .expect(400);
       expect(res.body.message).toBe("Invalid ID");
     });

@@ -4,16 +4,18 @@ import {
 } from "@asteasolutions/zod-to-openapi";
 
 import { registerSchemas, registerControllers } from "../libs/open-api";
+
 import * as todoSchemas from "./schemas/todo";
-import { todoController } from "./di";
+import * as authSchemas from "./schemas/auth";
+import { todoController, authController } from "./di";
 
 const registry = new OpenAPIRegistry();
 
 // !!!! Register schemas !!!!
-registerSchemas(registry, [todoSchemas]);
+registerSchemas(registry, [todoSchemas, authSchemas]);
 
 // !!!! Register controllers !!!!
-registerControllers(registry, todoController);
+registerControllers(registry, [todoController, authController]);
 
 const generator = new OpenApiGeneratorV3(registry.definitions);
 
