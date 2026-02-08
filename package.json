@@ -1,0 +1,42 @@
+{
+  "name": "ts-api-scaffold",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch run index.ts",
+    "test": "bun test",
+    "start": "bun index.ts",
+    "db:up": "docker compose up",
+    "db:down": "docker compose down",
+    "db:migrate": "bunx --bun prisma migrate dev --name",
+    "db:generate:models": "bunx --bun prisma generate",
+    "db:seed": "bunx --bun prisma db seed",
+    "build": "bun build ./index.ts --outdir ./dist --target bun"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^11.11.0",
+    "@types/bun": "latest",
+    "@types/express": "^5.0.6",
+    "@types/pg": "^8.16.0",
+    "@types/supertest": "^6.0.3",
+    "@types/swagger-ui-express": "^4.1.8",
+    "prisma": "^7.3.0",
+    "supertest": "^7.2.2",
+    "testcontainers": "^11.11.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.4.0",
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "@prisma/extension-accelerate": "^3.0.1",
+    "express": "^5.2.1",
+    "pg": "^8.18.0",
+    "reflect-metadata": "^0.2.2",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.3.6"
+  }
+}
