@@ -5,7 +5,8 @@ export class TestDatabase {
   private databaseUrl: string | undefined;
 
   async start(): Promise<string> {
-    if (process.env.DATABASE_URL) {
+    // Only use existing DATABASE_URL if in CI
+    if (process.env.DATABASE_URL && process.env.CI === "true") {
       console.log(`Using existing DATABASE_URL: ${process.env.DATABASE_URL}`);
       this.databaseUrl = process.env.DATABASE_URL;
 
