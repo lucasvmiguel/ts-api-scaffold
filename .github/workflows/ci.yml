@@ -40,6 +40,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Generate Prisma Client
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/ts-api-scaffold
         run: bun run db:generate:models
 
       - name: Check for uncommitted changes
